@@ -2,7 +2,7 @@ import http from 'http';
 import 'dotenv/config'
 import { router } from './routes.js';
 
-const PORT = process.env.PORT;
+const PORT = process.env.PORT || 5555;
 
 const server = http.createServer((req, res) => router.handle(req, res))
 
