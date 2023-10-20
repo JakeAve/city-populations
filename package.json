@@ -1,0 +1,33 @@
+{
+  "name": "cities-populations",
+  "version": "1.0.0",
+  "description": "rest api to get a city's population by state and city",
+  "main": "main.js",
+  "type": "module",
+  "scripts": {
+    "start": "node main.js",
+    "dev": "nodemon main.js",
+    "load-tests": "concurrently \"node main.js\" \"sleep 5 && artillery run ./tests/load-test.yaml\"",
+    "unit-tests": "concurrently \"PORT=5554 node main.js\" \"sleep 5 && mocha tests\""
+  },
+  "author": "JakeAve",
+  "license": "ISC",
+  "dependencies": {
+    "dotenv": "^16.3.1"
+  },
+  "devDependencies": {
+    "artillery": "^2.0.0-38",
+    "concurrently": "^8.2.2",
+    "mocha": "^10.2.0",
+    "nodemon": "^3.0.1"
+  },
+  "nodemonConfig": {
+    "ignore": [
+      "**/tests/**"
+    ]
+  },
+  "engines": {
+    "node": "v18.18.2",
+    "npm": "v9.8.1"
+  }
+}
