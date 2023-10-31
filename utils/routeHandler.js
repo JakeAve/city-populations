@@ -12,45 +12,46 @@ export const router = {
   },
 
   handle(req, res) {
-    const protocol = req.socket.encrypted ? "https" : "http";
-    const host = req.headers.host;
-    const method = req.method;
-    const url = new URL(req.url, `${protocol}://${host}`);
-    const pathParts = url.pathname.split("/").filter(Boolean);
+    const url = req.url.toLowerCase();
+    const cachedRoute = process.routeCache.get(`${url}:${req.method}`);
+    if (cachedRoute) {
+      return serveJSON(req, res, cachedRoute.status, cachedRoute.data);
+    }
+
+    const pathParts = url.match(/[^/]+/g) || [];
     req.params = {};
-    if (method === "PUT" || method === "POST") {
-      req.body = new Promise((resolve, reject) => {
-        let body = "";
-        req.on("data", (chunk) => {
-          body += chunk.toString();
-        });
-        req.on("end", () => {
-          resolve(body);
-        });
-        req.on("error", (err) => {
-          reject(err);
-        });
-      });
+    if (req.method === "PUT" || req.method === "POST") {
+      req.body = {
+        toString: async () => {
+          const chunks = [];
+          for await (const chunk of req) {
+            chunks.push(chunk);
+          }
+          const body = Buffer.concat(chunks).toString();
+          req.body = body;
+          return body;
+        },
+      };
     }
     for (const route of this.routes) {
-      if (route.method === method && isRouteMatch(pathParts, route.path, req)) {
+      if (route.method === req.method && isRouteMatch(pathParts, route.path, req)) {
         return route.handler(req, res);
       }
     }
 
-    serveJSON(res, 404, { message: "Not found", path: url.path });
+    serveJSON(req, res, 404, { message: "Not found", path: url });
   },
 };
 
 function isRouteMatch(input, route, req) {
-  const routeParts = route.toLowerCase().split("/").filter(Boolean);
+  const routeParts = route.toLowerCase().match(/[^/]+/g) || [];
   if (routeParts.length !== input.length) {
     return false;
   }
-  for (let i = 0; i < input.length; i++) {
-    if (routeParts[i].startsWith(":")) {
-      req.params[routeParts[i].slice(1)] = input[i];
-    } else if (input[i] !== routeParts[i]) {
+  for (const [i, part] of routeParts.entries()) {
+    if (part.startsWith(":")) {
+      req.params[part.slice(1)] = input[i];
+    } else if (input[i] !== part) {
       return false;
     }
   }

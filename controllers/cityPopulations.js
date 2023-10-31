@@ -1,17 +1,10 @@
 import fs from "fs/promises";
 
-export async function getPopulation(state, city) {
+export async function getPopulation(stateCity) {
   try {
-    const formattedState = decodeURIComponent(state)
-      .toLocaleLowerCase()
-      .replace(/\s/g, "_");
-    const formattedCity = decodeURIComponent(city)
-      .toLocaleLowerCase()
-      .replace(/\s/g, "_");
-    const contents = await fs.readFile(
-      `./data/${formattedState}/${formattedCity}.txt`,
-      { encoding: "utf-8" }
-    );
+    const contents = await fs.readFile(`./data/${stateCity}.txt`, {
+      encoding: "utf-8",
+    });
     return Number(contents);
   } catch (err) {
     if (err.code === "ENOENT") {
@@ -21,15 +14,9 @@ export async function getPopulation(state, city) {
   }
 }
 
-export async function updatePopulation(state, city, number) {
+export async function updatePopulation(stateCity, number) {
   try {
-    const formattedState = decodeURIComponent(state)
-      .toLocaleLowerCase()
-      .replace(/\s/g, "_");
-    const formattedCity = decodeURIComponent(city)
-      .toLocaleLowerCase()
-      .replace(/\s/g, "_");
-    const filePath = `./data/${formattedState}/${formattedCity}.txt`;
+    const filePath = `./data/${stateCity}.txt`;
     let didCreate = false;
     try {
       await fs.stat(filePath);
@@ -39,7 +26,7 @@ export async function updatePopulation(state, city, number) {
       } else throw err;
     }
     await fs.writeFile(filePath, number);
-    return { didCreate, population: number };
+    return { didCreate, population: Number(number) };
   } catch (err) {
     if (err.code === "ENOENT") {
       return { population: null };

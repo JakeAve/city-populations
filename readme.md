@@ -53,3 +53,11 @@ you meet your goal.
 being hindered by some of its conveniences.
 ● Structured code - Is it all in a giant blob file or is it well structured for ease of
 development and future expansion.
+
+ 
+ 
+ 	
+This is just for fun, to see how you rank against others who have done the same sample challenge. 
+
+We used Wasps With Bazookas to test each project with following setup:
+2x Wasps (16 threads, 5000 Users, 60 Seconds, timeout 30 Seconds)  

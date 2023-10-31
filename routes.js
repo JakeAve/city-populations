@@ -6,6 +6,7 @@ import { router as routeHandler } from "./utils/routeHandler.js";
 import { serveErrors } from "./utils/serveErrors.js";
 import { serveJSON } from "./utils/serveJSON.js";
 import { BadRequest } from "./errors/BadRequest.js";
+import { serializeStateCity } from "./utils/serializeStateCity.js";
 
 export const router = routeHandler;
 
@@ -16,7 +17,8 @@ router.get("/test", (_req, res) => {
 router.get("/api/population/state/:state/city/:city", async (req, res) => {
   try {
     const { state, city } = req.params;
-    const number = await getPopulation(state, city);
+    const stateCity = serializeStateCity(state, city);
+    const number = await getPopulation(stateCity);
 
     if (number === null) {
       throw new BadRequest([
@@ -24,16 +26,21 @@ router.get("/api/population/state/:state/city/:city", async (req, res) => {
       ]);
     }
 
-    serveJSON(res, 200, { population: number });
+    serveJSON(req, res, 200, { population: number }, true);
   } catch (err) {
-    serveErrors(res, err);
+    serveErrors(req, res, err);
   }
 });
 
 router.put("/api/population/state/:state/city/:city", async (req, res) => {
   try {
     const { state, city } = req.params;
-    const body = await req.body;
+    const body = await req.body.toString();
+
+    const cached = process.routeCache.get(`${req.url}:${req.method}:${body}`);
+    if (cached) {
+      return serveJSON(req, res, 200, cached.data);
+    }
 
     if (isNaN(Number(body))) {
       throw new BadRequest([
@@ -41,7 +48,8 @@ router.put("/api/population/state/:state/city/:city", async (req, res) => {
       ]);
     }
 
-    const { didCreate, population } = await updatePopulation(state, city, body);
+    const stateCity = serializeStateCity(state, city);
+    const { didCreate, population } = await updatePopulation(stateCity, body);
 
     if (population === null) {
       throw new BadRequest([
@@ -49,8 +57,20 @@ router.put("/api/population/state/:state/city/:city", async (req, res) => {
       ]);
     }
 
-    serveJSON(res, didCreate ? 201 : 200, { population });
+    process.send({
+      type: "add-route",
+      route: `${req.url.toLowerCase()}:${req.method}:${body}`,
+      response: { status: 200, data: { population } },
+    });
+
+    process.send({
+      type: "add-route",
+      route: `${req.url.toLowerCase()}:GET`,
+      response: { status: 200, data: { population } },
+    });
+
+    serveJSON(req, res, didCreate ? 201 : 200, { population }, true);
   } catch (err) {
-    serveErrors(res, err);
+    serveErrors(req, res, err);
   }
 });

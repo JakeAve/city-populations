@@ -8,7 +8,7 @@
     "start": "node main.js",
     "dev": "nodemon main.js",
     "load-tests": "concurrently \"node main.js\" \"sleep 5 && artillery run ./tests/load-test.yaml\"",
-    "unit-tests": "concurrently \"PORT=5554 node main.js\" \"sleep 5 && mocha tests\""
+    "unit-tests": "concurrently \"PORT=5554 npm run start\" \"sleep 5 && mocha tests\""
   },
   "author": "JakeAve",
   "license": "ISC",
