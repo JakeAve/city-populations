@@ -18,15 +18,15 @@ router.get("/api/population/state/:state/city/:city", async (req, res) => {
   try {
     const { state, city } = req.params;
     const stateCity = serializeStateCity(state, city);
-    const number = await getPopulation(stateCity);
+    const population = await getPopulation(stateCity);
 
-    if (number === null) {
+    if (population === null) {
       throw new BadRequest([
         { message: "This city does not exist", state, city },
       ]);
     }
 
-    serveJSON(req, res, 200, { population: number }, true);
+    serveJSON(req, res, 200, { population }, true);
   } catch (err) {
     serveErrors(req, res, err);
   }
@@ -69,7 +69,7 @@ router.put("/api/population/state/:state/city/:city", async (req, res) => {
       response: { status: 200, data: { population } },
     });
 
-    serveJSON(req, res, didCreate ? 201 : 200, { population }, true);
+    serveJSON(req, res, didCreate ? 201 : 200, { population });
   } catch (err) {
     serveErrors(req, res, err);
   }

@@ -11,5 +11,5 @@ export function serveErrors(req, res, err) {
   serveJSON(req, res, err.status, {
     message: err.message,
     errors: err.errors,
-  });
+  }, !(err instanceof InternalServerError));
 }
